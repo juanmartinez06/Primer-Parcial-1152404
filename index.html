@@ -9,26 +9,25 @@
 <body>
   <main class="app-container">
 
-    <!-- LOGIN -->
     <section id="login-section" class="card">
       <h1 class="title">Ingreso Estudiantes</h1>
 
-      <form id="login-form" aria-label="Formulario de login">
+      <form id="login-form">
         <div class="form-row">
           <label for="codigo">Código de estudiante</label>
-          <input id="codigo" name="codigo" type="text" required autocomplete="username" />
+          <input id="codigo" name="codigo" type="text" required />
         </div>
 
         <div class="form-row">
           <label for="clave">Contraseña</label>
-          <input id="clave" name="clave" type="password" required autocomplete="current-password" />
+          <input id="clave" name="clave" type="password" required />
         </div>
 
         <div class="actions">
           <button id="login-btn" type="submit">Ingresar</button>
         </div>
 
-        <div id="login-error" class="error" role="alert" aria-live="polite" hidden></div>
+        <div id="login-error" class="error" hidden></div>
       </form>
     </section>
 
@@ -37,11 +36,168 @@
         <div>
           <strong>Código:</strong> <span id="user-codigo"></span><br />
           <strong>Nombre:</strong> <span id="user-nombre"></span><br />
+          <strong>Email:</strong> <span id="user-email"></span><br />
           <strong>Promedio Ponderado:</strong> <span id="promedio"></span>
         </div>
-        <div class="top-actions">
+        <div>
           <button id="logout-btn" class="secondary">Cerrar sesión</button>
         </div>
       </div>
 
       <hr />
+
+      <div id="tabla-notas-container">
+        <table id="tabla-notas">
+          <thead>
+            <tr>
+              <th>Asignatura</th>
+              <th>Créditos</th>
+              <th>P1</th>
+              <th>P2</th>
+              <th>P3</th>
+              <th>EF</th>
+              <th>Definitiva</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const BASE = "https://24a0dac0-2579-4138-985c-bec2df4bdfcc-00-3unzo70c406dl.riker.replit.dev";
+    const API_LOGIN = `${BASE}/login`;
+    const API_NOTAS = (codigo) => `${BASE}/students/${codigo}/notas`;
+    const LS_KEY = "user";
+
+    const $ = id => document.getElementById(id);
+
+    function saveUser(userObj) {
+      localStorage.setItem(LS_KEY, JSON.stringify(userObj));
+    }
+
+    function getUser() {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }
+
+    function logout() {
+      localStorage.removeItem(LS_KEY);
+      $("codigo").value = "";
+      $("clave").value = "";
+      showSection("login");
+    }
+
+    function showSection(name) {
+      $("login-section").hidden = name !== "login";
+      $("notas-section").hidden = name !== "notas";
+    }
+
+    function showError(msg) {
+      $("login-error").textContent = msg;
+      $("login-error").hidden = false;
+    }
+
+    function clearError() {
+      $("login-error").textContent = "";
+      $("login-error").hidden = true;
+    }
+
+    function populateUserPanel(userObj) {
+      $("user-codigo").textContent = userObj.codigo;
+      $("user-nombre").textContent = userObj.nombre;
+      $("user-email").textContent = userObj.email;
+    }
+
+    function renderNotas(notas) {
+      const tbody = $("tabla-body");
+      tbody.innerHTML = "";
+      let suma = 0, totalCreditos = 0;
+
+      notas.forEach(nota => {
+        const { asignatura, creditos, p1, p2, p3, ef } = nota;
+        const definitiva = (((p1 + p2 + p3) / 3) * 0.7 + ef * 0.3).toFixed(2);
+
+        suma += definitiva * creditos;
+        totalCreditos += creditos;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${asignatura}</td>
+          <td>${creditos}</td>
+          <td>${p1}</td>
+          <td>${p2}</td>
+          <td>${p3}</td>
+          <td>${ef}</td>
+          <td>${definitiva}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      $("promedio").textContent = (suma / totalCreditos).toFixed(2);
+    }
+
+    async function cargarNotas(user) {
+      try {
+        const resp = await fetch(API_NOTAS(user.codigo));
+        if (!resp.ok) throw new Error("Error en notas");
+        const data = await resp.json();
+        renderNotas(data);
+      } catch {
+        $("tabla-body").innerHTML = `<tr><td colspan="7">No se pudieron cargar las notas</td></tr>`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = getUser();
+      if (user) {
+        populateUserPanel(user);
+        showSection("notas");
+        cargarNotas(user);
+      } else {
+        showSection("login");
+      }
+    });
+
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const codigo = $("codigo").value.trim();
+      const clave = $("clave").value;
+
+      try {
+        const resp = await fetch(API_LOGIN, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codigo, clave })
+        });
+
+        if (!resp.ok) {
+          showError("Credenciales no válidas");
+          $("codigo").value = "";
+          $("clave").value = "";
+          return;
+        }
+
+        const userObj = await resp.json();
+        saveUser(userObj);
+        populateUserPanel(userObj);
+        showSection("notas");
+        cargarNotas(userObj);
+
+      } catch {
+        showError("Error de conexión");
+      }
+    });
+
+    $("logout-btn").addEventListener("click", (e) => {
+      e.preventDefault();
+      logout();
+    });
+  </script>
+</body>
+</html>
+
