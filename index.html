@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Parcial - Consulta de Notas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-container">
+
+    <!-- LOGIN -->
+    <section id="login-section" class="card">
+      <h1 class="title">Ingreso Estudiantes</h1>
+
+      <form id="login-form" aria-label="Formulario de login">
+        <div class="form-row">
+          <label for="codigo">Código de estudiante</label>
+          <input id="codigo" name="codigo" type="text" required autocomplete="username" />
+        </div>
+
+        <div class="form-row">
+          <label for="clave">Contraseña</label>
+          <input id="clave" name="clave" type="password" required autocomplete="current-password" />
+        </div>
+
+        <div class="actions">
+          <button id="login-btn" type="submit">Ingresar</button>
+        </div>
+
+        <div id="login-error" class="error" role="alert" aria-live="polite" hidden></div>
+      </form>
+    </section>
+
+    <section id="notas-section" class="card" hidden>
+      <div class="top-panel">
+        <div>
+          <strong>Código:</strong> <span id="user-codigo"></span><br />
+          <strong>Nombre:</strong> <span id="user-nombre"></span><br />
+          <strong>Promedio Ponderado:</strong> <span id="promedio"></span>
+        </div>
+        <div class="top-actions">
+          <button id="logout-btn" class="secondary">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <hr />
