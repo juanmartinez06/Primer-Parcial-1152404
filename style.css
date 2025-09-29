@@ -1,0 +1,32 @@
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+:root {
+  --accent: #D31024;
+  --card-bg: #ffffff;
+  --bg: #f2f3f5;
+  --text: #222;
+  --muted: #666;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.card {
+  background: var(--card-bg);
+  width: 95%;
+  max-width: 800px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  padding: 20px;
+}
